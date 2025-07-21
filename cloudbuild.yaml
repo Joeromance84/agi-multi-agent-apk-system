@@ -1,44 +1,110 @@
 
-# AGI Multi-Agent System - Cloud Build Configuration
-# Phase 1: Environment Integration
+# AGI Multi-Agent System - Phase 2: Autonomous Build
 steps:
-  # Step 1: Environment Setup
-  - name: 'gcr.io/cloud-builders/git'
-    entrypoint: 'bash'
-    args:
-      - '-c'
-      - |
-        echo "🤖 AGI Multi-Agent System Initializing..."
-        echo "Repository: ${REPO_NAME}"
-        echo "Branch: ${BRANCH_NAME}"
-        echo "Commit: ${COMMIT_SHA}"
-        echo "Build ID: ${BUILD_ID}"
-        
-  # Step 2: Agent Coordination Test
+  # Agent 1: Code Generation Agent (Analysis)
   - name: 'python:3.11'
+    id: 'code-analysis'
     entrypoint: 'python'
     args:
       - '-c'
       - |
-        print("🧠 AGI Agent Coordination Test")
-        agents = ["code_generation", "build", "testing", "deployment"]
-        for agent in agents:
-            print(f"  ✅ {agent.title()} Agent: Ready")
-        print("🚀 Multi-Agent System: Operational")
+        print("🧠 Code Generation Agent: Analyzing hello_world.py")
+        with open("hello_world.py", "r") as f:
+            code = f.read()
         
-  # Step 3: Build Trigger Confirmation
-  - name: 'gcr.io/cloud-builders/gcloud'
+        # AGI Learning: Identify performance issues
+        issues = []
+        if "time.sleep" in code:
+            issues.append("Artificial latency detected")
+        if "for i in range(1000)" in code:
+            issues.append("Inefficient loop processing")
+            
+        print(f"  🔍 Issues identified: {len(issues)}")
+        for issue in issues:
+            print(f"    ❌ {issue}")
+        
+        print("  🎯 AGI Task: Optimize these performance bottlenecks")
+
+  # Agent 2: Build Agent (Container Creation)  
+  - name: 'gcr.io/cloud-builders/docker'
+    id: 'container-build'
     args:
-      - 'builds'
-      - 'list'
-      - '--limit=1'
-      - '--format=value(id,status,createTime)'
+      - 'build'
+      - '-t'
+      - 'gcr.io/${PROJECT_ID}/agi-hello-world:${BUILD_ID}'
+      - '.'
+    waitFor: ['code-analysis']
+
+  # Agent 3: Testing Agent (Performance Testing)
+  - name: 'gcr.io/cloud-builders/docker'
+    id: 'performance-test'
+    entrypoint: 'bash'
+    args:
+      - '-c'
+      - |
+        echo "🧪 Testing Agent: Performance Analysis"
+        docker run --rm -d -p 8080:8080 --name agi-test gcr.io/${PROJECT_ID}/agi-hello-world:${BUILD_ID}
+        sleep 5
+        
+        echo "📊 Measuring response time..."
+        start_time=$(date +%s%N)
+        curl -s localhost:8080 > /dev/null
+        end_time=$(date +%s%N)
+        
+        response_time=$(( (end_time - start_time) / 1000000 ))
+        echo "⏱️  Response time: ${response_time}ms"
+        
+        if [ $response_time -gt 1000 ]; then
+            echo "❌ Performance issue detected: Response time > 1000ms"
+            echo "🎯 AGI Challenge: Optimize to < 100ms"
+        else
+            echo "✅ Performance acceptable"
+        fi
+        
+        docker stop agi-test
+    waitFor: ['container-build']
+
+  # Agent 4: Deployment Agent (Cloud Run Deployment)
+  - name: 'gcr.io/cloud-builders/gcloud'
+    id: 'deployment'
+    args:
+      - 'run'
+      - 'deploy'
+      - 'agi-hello-world'
+      - '--image=gcr.io/${PROJECT_ID}/agi-hello-world:${BUILD_ID}'
+      - '--platform=managed'
+      - '--region=us-central1'
+      - '--allow-unauthenticated'
+      - '--port=8080'
+    waitFor: ['performance-test']
+
+  # AGI Learning Summary
+  - name: 'python:3.11'
+    id: 'agi-learning'
+    entrypoint: 'python'
+    args:
+      - '-c'
+      - |
+        print("🧠 AGI Learning Summary - Phase 2")
+        print("="*50)
+        print("✅ Multi-agent coordination: SUCCESS")
+        print("✅ Autonomous build pipeline: SUCCESS") 
+        print("✅ Performance testing: ACTIVE")
+        print("✅ Cloud deployment: SUCCESS")
+        print()
+        print("🎯 Next Challenge: Phase 3 - ACI Loop")
+        print("   Task: Autonomously optimize the performance issues")
+        print("   Goal: Reduce response time from >1000ms to <100ms")
+        print("   Method: Commit optimized code and validate improvement")
+    waitFor: ['deployment']
+
+images:
+  - 'gcr.io/${PROJECT_ID}/agi-hello-world:${BUILD_ID}'
 
 options:
   logging: CLOUD_LOGGING_ONLY
-  
-# Substitutions for AGI learning
+
 substitutions:
-  _AGI_PHASE: "1"
-  _AGI_CAPABILITY: "environment_integration"
-  _AGI_LEARNING_MODE: "active"
+  _AGI_PHASE: "2"
+  _AGI_CAPABILITY: "autonomous_build"
+  _AGI_CHALLENGE: "performance_optimization"
